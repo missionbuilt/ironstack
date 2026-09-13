@@ -72,7 +72,11 @@ print("\nEvery alias the taxonomy already has is offered")
 # names will pick right.
 # "Russian Twists (Medicine Ball)" -> "MB Russian Twists" joined the list on Sept 8 2026:
 # offered, but "Russian Twists" (the two-word name) wins on ratio.
-KNOWN_NOT_FIRST = {"Incline DB Press", "SL Glute Bridge", "Russian Twists (Medicine Ball)"}
+# "Rack Pull" -> "Block Pull" joined the list on Sept 13 2026: offered second at 0.535,
+# beaten by "Face Pulls" at 0.556 on raw ratio. Both share only the word "pull", and the
+# taxonomy resolves this name directly, so the matcher never sees it in practice.
+KNOWN_NOT_FIRST = {"Incline DB Press", "SL Glute Bridge", "Russian Twists (Medicine Ball)",
+                   "Rack Pull"}
 
 # The first alias the lexical matcher cannot offer AT ALL, logged Sept 8 2026 and
 # resolved by hand: "Barbell Overhead Press (Standing)" -> "Strict Press" share no word.
@@ -80,7 +84,10 @@ KNOWN_NOT_FIRST = {"Incline DB Press", "SL Glute Bridge", "Russian Twists (Medic
 # semantic index; it lives here as an assertion so that the day the matcher (or an
 # abbreviation-table entry) starts offering it, this line fails and gets removed rather
 # than the miss being quietly absorbed.
-KNOWN_NOT_OFFERED = {"Barbell Overhead Press (Standing)"}
+# "Surplus Deadlift" -> "Block Pull" joined it on Sept 13 2026 for the same reason: the
+# two share no word, so the matcher offers five deadlift variants and never reaches the
+# right answer. Lexically unreachable, and the second piece of evidence for a semantic index.
+KNOWN_NOT_OFFERED = {"Barbell Overhead Press (Standing)", "Surplus Deadlift"}
 
 not_first = []
 for alias, entry in sorted(RAW.items()):

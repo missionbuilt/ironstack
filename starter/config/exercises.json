@@ -2277,5 +2277,25 @@
     "lift_family": null,
     "competition": false,
     "unilateral": false
+  },
+  "Block Pull": {
+    "pattern": "hinge",
+    "muscles_primary": [
+      "hamstrings",
+      "glutes"
+    ],
+    "muscles_secondary": [
+      "lower-back",
+      "traps"
+    ],
+    "lift_family": "deadlift",
+    "competition": false,
+    "unilateral": false
+  },
+  "Rack Pull": {
+    "alias_of": "Block Pull"
+  },
+  "Surplus Deadlift": {
+    "alias_of": "Block Pull"
   }
 }

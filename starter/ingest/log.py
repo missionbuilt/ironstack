@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import subprocess
 import sys
 from datetime import date
@@ -302,9 +303,18 @@ def main(argv: list) -> int:
     gaps = missing_metadata(doc["session"], defaults.get("require", []))
 
     session_date = doc["session"]["date"]
+    # These two fields decide a directory and three filenames, and mkdir runs before the
+    # schema validation further down. A malformed .iron would otherwise create a stray
+    # directory on its way to being rejected, so their shape is checked here first.
+    if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", str(session_date)):
+        print(f"session.date must be YYYY-MM-DD, got {session_date!r}", file=sys.stderr)
+        return 1
+    stem = doc["session"].get("session_id") or session_date
+    if not re.fullmatch(r"[A-Za-z0-9_.-]+", str(stem)) or str(stem).startswith("."):
+        print(f"session.session_id must be a plain filename, got {stem!r}", file=sys.stderr)
+        return 1
     year_dir = WORKOUTS_DIR / session_date[:4]
     year_dir.mkdir(parents=True, exist_ok=True)
-    stem = doc["session"].get("session_id") or session_date
     json_path = year_dir / f"{stem}.json"
     md_path = year_dir / f"{stem}.md"
     iron_path = year_dir / f"{stem}.iron"

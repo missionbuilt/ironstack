@@ -18,6 +18,11 @@ on:
       - ".github/workflows/index.yml"
   workflow_dispatch: {}
 
+# Indexing writes to Elasticsearch, never back to the repo, so the job token gets read
+# access and nothing else. Least privilege by default, for everyone who adopts this.
+permissions:
+  contents: read
+
 # One indexer at a time. Three logs pushed a minute apart on Sept 10 2026 ran as three
 # concurrent jobs, each rebuilding the cluster from its own commit's tree; the one that
 # finished last had the oldest tree, and verify_index found a week's signals and a
@@ -30,9 +35,12 @@ concurrency:
 jobs:
   index:
     runs-on: ubuntu-latest
+    # ES_ENDPOINT and ES_SEMANTIC are job-wide because the `if:` guards below read them,
+    # and the `secrets` context is not available in a step-level `if:`. The API key is
+    # not job-wide: it is handed only to the four steps that actually talk to the
+    # cluster, so checkout and setup-python never see a credential they have no use for.
     env:
       ES_ENDPOINT: ${{ secrets.ES_ENDPOINT }}
-      ES_API_KEY: ${{ secrets.ES_API_KEY }}
       ES_SEMANTIC: ${{ vars.ES_SEMANTIC || 'auto' }}
     steps:
       - uses: actions/checkout@v4
@@ -76,14 +84,20 @@ jobs:
 
       - name: Ensure indices exist
         if: ${{ env.ES_ENDPOINT != '' }}
+        env:
+          ES_API_KEY: ${{ secrets.ES_API_KEY }}
         run: python ingest/setup_indices.py
 
       - name: Index workout logs
         if: ${{ env.ES_ENDPOINT != '' }}
+        env:
+          ES_API_KEY: ${{ secrets.ES_API_KEY }}
         run: python ingest/index_workouts.py
 
       - name: Index meet records
         if: ${{ env.ES_ENDPOINT != '' }}
+        env:
+          ES_API_KEY: ${{ secrets.ES_API_KEY }}
         run: python ingest/index_meets.py
 
       # Indexing reports success when the bulk call succeeds, which is not the same as
@@ -94,6 +108,8 @@ jobs:
       # belongs in the deploy.
       - name: Verify the cluster matches the repo
         if: ${{ env.ES_ENDPOINT != '' }}
+        env:
+          ES_API_KEY: ${{ secrets.ES_API_KEY }}
         run: python ingest/verify_index.py
 
       # A green run that indexed nothing hides a broken pipeline. On main a missing
