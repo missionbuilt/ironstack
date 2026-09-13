@@ -9,6 +9,11 @@ on:
   push:
   pull_request:
 
+# Nothing here writes to the repo, opens an issue, or publishes a package, so the
+# job token gets read access and nothing else. Least privilege by default.
+permissions:
+  contents: read
+
 jobs:
   ironstack:
     runs-on: ubuntu-latest
